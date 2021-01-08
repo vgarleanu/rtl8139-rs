@@ -3,8 +3,14 @@ name = "rtl8139-rs"
 version = "0.1.0"
 authors = ["Valerian G. <valerian.garleanu@pm.me>"]
 edition = "2018"
+description = "no_std rtl8139 driver with async and sync interfaces"
+documentation = "https://docs.rs/rtl8139-rs"
+readme = "README.md"
+repository = "https://github.com/vgarleanu/rtl8139-rs"
+license = "MIT"
+keywords = ["no_std", "driver", "rtl8139", "nic"]
+categories = ["asynchronous", "embedded", "hardware-support", "no-std"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 x86_64 = "0.13.1"

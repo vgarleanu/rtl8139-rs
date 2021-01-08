@@ -1,6 +1,6 @@
 [package]
 name = "rtl8139-rs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Valerian G. <valerian.garleanu@pm.me>"]
 edition = "2018"
 description = "no_std rtl8139 driver with async and sync interfaces"

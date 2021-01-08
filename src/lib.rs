@@ -4,6 +4,7 @@
 //! * https://www.cs.usfca.edu/~cruse/cs326f04/RTL8139_ProgrammersGuide.pdf
 //! * https://www.cs.usfca.edu/~cruse/cs326f04/RTL8139D_DataSheet.pdf
 #![no_std]
+#![feature(type_alias_impl_trait)]
 
 extern crate alloc;
 
@@ -29,6 +30,8 @@ use conquer_once::spin::OnceCell;
 use crossbeam_queue::SegQueue;
 use spin::RwLock;
 use x86_64::instructions::port::Port;
+use x86_64::PhysAddr;
+use x86_64::VirtAddr;
 
 // Here we define all the RX Buffer lengths that we are gonna use
 // NOTE: Make sure you do all your logic and math with RX_BUF_LEN as technically
@@ -91,6 +94,8 @@ struct Rtl8139State {
 
     pub buffer: [u8; RX_BUF_LEN_WRAPPED],
     pub rx_cursor: usize,
+
+    pub virt_to_phys: fn(VirtAddr) -> PhysAddr,
 }
 
 pub struct RTL8139 {
@@ -103,12 +108,15 @@ impl RTL8139 {
         (0x2, 0x00, 0x10ec, 0x8139)
     }
 
-    /// Preloads the driver.
-    ///
+    /// Function preloads the driver.
+    /// # Arguments
+    /// * `base` - base port for the device
+    /// * `virt_to_phys` - function or closure that converts a virtaddr into a physaddr (used for
+    /// DMA).
     /// # Safety
     /// The caller of this function must pass a valid port base for a valid PCI device. Furthermore
     /// the caller must ensure that mastering and interrupts for the PCI device are enabled.
-    pub unsafe fn preload_unchecked(base: u16) -> Self {
+    pub unsafe fn preload_unchecked(base: u16, virt_to_phys: fn(VirtAddr) -> PhysAddr) -> Self {
         let inner = Rtl8139State {
             config_1: Port::new(base + 0x52),
             cmd_reg: Port::new(base + 0x37),
@@ -145,6 +153,7 @@ impl RTL8139 {
 
             buffer: [0u8; RX_BUF_LEN_WRAPPED],
             rx_cursor: 0,
+            virt_to_phys,
         };
 
         FRAMES.init_once(|| SegQueue::new());
@@ -183,7 +192,9 @@ impl RTL8139 {
             .try_into()
             .expect("rtl8139: failed to read mac");
 
-        let buffer_ptr = inner.buffer.as_ptr() as u32;
+        let buffer_virt = unsafe { VirtAddr::new_unsafe(inner.buffer.as_ptr() as u64) };
+        let virt_to_phys = &inner.virt_to_phys;
+        let buffer_ptr = virt_to_phys(buffer_virt).as_u64() as u32;
 
         // Unsafe block specific for pre-launch NIC config
         unsafe {
@@ -333,9 +344,11 @@ impl Rtl8139State {
         // this device
 
         // Disable interrupts for this PCI device to avoid deadlock to do with inner
+        let virt_to_phys = &self.virt_to_phys;
         let cursor = self.tx_cursor;
+        let data_ptr = virt_to_phys(VirtAddr::new_unsafe(data.as_ptr() as u64)).as_u64();
 
-        self.tx_dat[cursor].write(data.as_ptr() as u32);
+        self.tx_dat[cursor].write(data_ptr as u32);
         self.tx_cmd[cursor].write((data.len() as u32) & 0xfff);
 
         loop {

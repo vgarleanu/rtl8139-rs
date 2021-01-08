@@ -1,0 +1,19 @@
+[package]
+name = "rtl8139-rs"
+version = "0.1.0"
+authors = ["Valerian G. <valerian.garleanu@pm.me>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+x86_64 = "0.13.1"
+conquer-once = "0.3.2"
+crossbeam-queue = "0.3.1"
+spin = "0.7.0"
+futures-util = { version = "0.3.8", optional = true, default-features = false, features = ["alloc", "async-await", "sink"] }
+cfg-if = { version = "1.0.0", default-features = false }
+
+[features]
+default = ["async"]
+async = ["futures-util"]

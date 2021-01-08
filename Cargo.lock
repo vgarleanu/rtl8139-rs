@@ -57,7 +57,6 @@ checksum = "02d96d1e189ef58269ebe5b97953da3274d83a93af647c2ddd6f9dab28cedb8d"
 dependencies = [
  "autocfg",
  "cfg-if",
- "lazy_static",
 ]
 
 [[package]]
@@ -92,12 +91,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lazy_static"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
-
-[[package]]
 name = "pin-project-lite"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -116,6 +109,7 @@ dependencies = [
  "cfg-if",
  "conquer-once",
  "crossbeam-queue",
+ "crossbeam-utils",
  "futures-util",
  "spin",
  "x86_64",
